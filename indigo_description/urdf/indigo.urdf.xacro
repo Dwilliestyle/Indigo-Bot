@@ -1,0 +1,243 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="indigobot">
+
+  <!-- =================================================================== -->
+  <!-- Properties                                                         -->
+  <!-- CONFIRMED values come from earlier bring-up/measurement sessions.  -->
+  <!-- RECONSTRUCTED/PLACEHOLDER values were not pinned down precisely    -->
+  <!-- before and should be checked against the real robot.               -->
+  <!-- =================================================================== -->
+
+  <!-- CONFIRMED: measured with calipers -->
+  <xacro:property name="wheel_radius" value="0.0325"/>      <!-- 65mm JGA25-371 wheels -->
+  <xacro:property name="wheel_separation" value="0.170"/>   <!-- center-to-center -->
+  <xacro:property name="caster_radius" value="0.01235"/>    <!-- 24.70mm diameter caster -->
+  <xacro:property name="wheel_x_offset" value="0.021"/>     <!-- wheel axle, forward of plate center -->
+  <xacro:property name="caster_x_offset" value="-0.057"/>   <!-- caster, rear of plate center -->
+
+  <!-- CONFIRMED: chassis stack -->
+  <xacro:property name="plate_length" value="0.130"/>
+  <xacro:property name="plate_width" value="0.115"/>
+  <xacro:property name="plate_thickness" value="0.003"/>
+  <xacro:property name="standoff_bottom_to_middle" value="0.045"/>
+  <xacro:property name="standoff_middle_to_top" value="0.045"/>
+
+  <!-- RECONSTRUCTED: not measured, adjust if you have real values -->
+  <xacro:property name="wheel_width" value="0.026"/>
+  <xacro:property name="plate_mass" value="0.1"/>      <!-- per plate, placeholder -->
+  <xacro:property name="wheel_mass" value="0.05"/>     <!-- placeholder -->
+  <xacro:property name="caster_mass" value="0.02"/>    <!-- placeholder -->
+
+  <!-- Derived plate stack heights (relative to base_link origin) -->
+  <xacro:property name="z_middle_plate" value="${plate_thickness + standoff_bottom_to_middle}"/>
+  <xacro:property name="z_top_plate" value="${z_middle_plate + plate_thickness + standoff_middle_to_top}"/>
+
+  <!-- =================================================================== -->
+  <!-- Materials                                                          -->
+  <!-- =================================================================== -->
+  <material name="indigo_blue">
+    <color rgba="0.1 0.1 0.6 1.0"/>
+  </material>
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+  <material name="grey">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+
+  <!-- =================================================================== -->
+  <!-- Inertia macros                                                     -->
+  <!-- =================================================================== -->
+  <xacro:macro name="box_inertia" params="mass x y z">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(1/12) * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${(1/12) * mass * (x*x + y*y)}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertia" params="mass r h">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(1/12) * mass * (3*r*r + h*h)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (3*r*r + h*h)}" iyz="0.0"
+        izz="${0.5 * mass * r*r}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="sphere_inertia" params="mass r">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${0.4 * mass * r*r}" ixy="0.0" ixz="0.0"
+        iyy="${0.4 * mass * r*r}" iyz="0.0"
+        izz="${0.4 * mass * r*r}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- =================================================================== -->
+  <!-- base_footprint -> base_link                                       -->
+  <!-- CONFIRMED: this Z offset is what got the robot sitting correctly   -->
+  <!-- in RViz the first time around.                                     -->
+  <!-- =================================================================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius * 1.5}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =================================================================== -->
+  <!-- base_link (bottom plate)                                          -->
+  <!-- =================================================================== -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="indigo_blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia mass="${plate_mass}" x="${plate_length}" y="${plate_width}" z="${plate_thickness}"/>
+  </link>
+
+  <!-- =================================================================== -->
+  <!-- Middle and top plates (fixed, stacked on standoffs)                -->
+  <!-- =================================================================== -->
+  <link name="middle_link">
+    <visual>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="indigo_blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia mass="${plate_mass}" x="${plate_length}" y="${plate_width}" z="${plate_thickness}"/>
+  </link>
+
+  <joint name="middle_plate_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="middle_link"/>
+    <origin xyz="0 0 ${z_middle_plate}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="top_link">
+    <visual>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="indigo_blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia mass="${plate_mass}" x="${plate_length}" y="${plate_width}" z="${plate_thickness}"/>
+  </link>
+
+  <joint name="top_plate_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="top_link"/>
+    <origin xyz="0 0 ${z_top_plate}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =================================================================== -->
+  <!-- Wheel macro                                                        -->
+  <!-- CONFIRMED: Z offset formula (-wheel_radius * 0.5) from earlier      -->
+  <!-- bring-up. X/Y offsets from measured wheel axle position.            -->
+  <!-- IMPORTANT: right wheel is instantiated first, below, to match the  -->
+  <!-- index assumption hardcoded in indigobot_interface.cpp (index 0 =   -->
+  <!-- right, index 1 = left).                                            -->
+  <!-- =================================================================== -->
+  <xacro:macro name="wheel" params="prefix reflect">
+    <link name="wheel_${prefix}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertia mass="${wheel_mass}" r="${wheel_radius}" h="${wheel_width}"/>
+    </link>
+
+    <joint name="wheel_${prefix}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="wheel_${prefix}_link"/>
+      <origin xyz="${wheel_x_offset} ${reflect * wheel_separation / 2} ${-wheel_radius * 0.5}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- right wheel listed first: matches hardware interface index order -->
+  <xacro:wheel prefix="right" reflect="-1"/>
+  <xacro:wheel prefix="left" reflect="1"/>
+
+  <!-- =================================================================== -->
+  <!-- Caster                                                             -->
+  <!-- CONFIRMED: Z offset formula from earlier bring-up.                 -->
+  <!-- =================================================================== -->
+  <link name="caster_link">
+    <visual>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+    </collision>
+    <xacro:sphere_inertia mass="${caster_mass}" r="${caster_radius}"/>
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_link"/>
+    <origin xyz="${caster_x_offset} 0 ${-wheel_radius * 1.5 + caster_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =================================================================== -->
+  <!-- ros2_control                                                       -->
+  <!-- Joint order matters: right wheel must be listed first to match     -->
+  <!-- the index 0 = right, index 1 = left assumption in                  -->
+  <!-- indigobot_interface.cpp's read()/write() functions.                -->
+  <!-- =================================================================== -->
+  <ros2_control name="IndigobotSystem" type="system">
+    <hardware>
+      <plugin>indigo_firmware/IndigobotInterface</plugin>
+      <param name="port">/dev/ttyUSB0</param>
+    </hardware>
+    <joint name="wheel_right_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="wheel_left_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+</robot>

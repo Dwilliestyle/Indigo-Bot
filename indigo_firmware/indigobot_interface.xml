@@ -1,0 +1,10 @@
+<library path="indigo_firmware">
+    <class name="indigo_firmware/IndigobotInterface"
+      type="indigo_firmware::IndigobotInterface"
+      base_class_type="hardware_interface::SystemInterface"
+    >
+      <description>
+        Indigobot Hardware Interface
+      </description>
+    </class>
+  </library>
