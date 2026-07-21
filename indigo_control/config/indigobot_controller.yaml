@@ -11,8 +11,8 @@ controller_manager:
 
 indigobot_controller:
   ros__parameters:
-    type        : diff_drive_controller/DiffDriveController
     use_stamped_vel: true
+    # wheel names were switched on purpose
     left_wheel_names  : ['wheel_right_joint']
     right_wheel_names : ['wheel_left_joint']
 
@@ -21,7 +21,7 @@ indigobot_controller:
     twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
 
     wheel_separation : 0.17
-    wheel_radius : 0.033
+    wheel_radius : 0.0325
 
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0
