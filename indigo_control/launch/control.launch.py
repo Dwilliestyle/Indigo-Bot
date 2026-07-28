@@ -1,3 +1,5 @@
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
@@ -7,7 +9,7 @@ def generate_launch_description():
             package="controller_manager",
             executable="ros2_control_node",
             parameters=[
-                # your robot_description param + controllers.yaml
+                os.path.join(get_package_share_directory("indigo_control"), "config", "indigobot_controller.yaml")
             ],
             output="screen",
         ),

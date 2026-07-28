@@ -37,7 +37,7 @@ def generate_launch_description():
     )
 
     teleop_joy_config = PathJoinSubstitution(
-        [get_package_share_directory("indigo_bringup"), "config", "teleop_joy.yaml"]
+        [get_package_share_directory("indigo_control"), "config", "teleop_joy.yaml"]
     )
 
     teleop_joy_node = Node(
