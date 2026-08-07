@@ -37,19 +37,8 @@ def generate_launch_description():
         }.items()
     )
 
-    controller = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("indigo_control"),
-                "launch",
-                "control.launch.py"
-            )
-        ),
-    )
-
     return LaunchDescription([
         mode_arg,
         hardware_interface,
         teleop,
-        controller,
     ])
