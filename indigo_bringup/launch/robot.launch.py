@@ -14,16 +14,6 @@ def generate_launch_description():
         description="Teleop input mode: 'keyboard' or 'joystick'",
     )
 
-    description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("indigo_description"),
-                "launch",
-                "description.launch.py"
-            )
-        ),
-    )
-
     hardware_interface = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -59,7 +49,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         mode_arg,
-        description,
         hardware_interface,
         teleop,
         controller,
