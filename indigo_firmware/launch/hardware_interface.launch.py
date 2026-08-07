@@ -55,11 +55,17 @@ def generate_launch_description():
         arguments=["indigobot_controller"],
     )
 
+    mpu_driver = Node(
+        package="indigo_firmware",
+        executable="mpu_driver.py"
+    )
+
     return LaunchDescription(
         [
             robot_state_publisher_node,
             controller_manager,
             joint_state_broadcaster_spawner,
-            indigobot_controller_spawner
+            indigobot_controller_spawner,
+            mpu_driver
         ]
     )
