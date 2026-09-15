@@ -23,8 +23,8 @@ class MPU_Driver(Node):
 
     def __init__(self):
         super().__init__("mpu_driver")
-        
-        # I2C Interafce
+
+        # I2C Interface
         self.is_connected_ = False
         self.init_i2c()
 
@@ -32,6 +32,9 @@ class MPU_Driver(Node):
         self.imu_pub_ = self.create_publisher(Imu, "/imu/out", qos_profile=qos_profile_sensor_data)
         self.imu_msg_ = Imu()
         self.imu_msg_.header.frame_id = "base_footprint"
+        # Unknown covariance until calibrated
+        self.imu_msg_.angular_velocity_covariance[0] = -1.0
+        self.imu_msg_.linear_acceleration_covariance[0] = -1.0
         self.frequency_ = 0.01
         self.timer_ = self.create_timer(self.frequency_, self.timerCallback)
 
@@ -39,18 +42,18 @@ class MPU_Driver(Node):
         try:
             if not self.is_connected_:
                 self.init_i2c()
-            
+
             # Read Accelerometer raw value
             acc_x = self.read_raw_data(ACCEL_XOUT_H)
             acc_y = self.read_raw_data(ACCEL_YOUT_H)
             acc_z = self.read_raw_data(ACCEL_ZOUT_H)
-            
+
             # Read Gyroscope raw value
             gyro_x = self.read_raw_data(GYRO_XOUT_H)
             gyro_y = self.read_raw_data(GYRO_YOUT_H)
             gyro_z = self.read_raw_data(GYRO_ZOUT_H)
-            
-            # Full scale range +/- 250 degree/C as per sensitivity scale factor     
+
+            # Full scale range +/- 250 degree/s, sensitivity 131 LSB/(deg/s)
             self.imu_msg_.linear_acceleration.x = acc_x / 1670.13
             self.imu_msg_.linear_acceleration.y = acc_y / 1670.13
             self.imu_msg_.linear_acceleration.z = acc_z / 1670.13
@@ -69,22 +72,23 @@ class MPU_Driver(Node):
             self.bus_.write_byte_data(DEVICE_ADDRESS, SMPLRT_DIV, 7)
             self.bus_.write_byte_data(DEVICE_ADDRESS, PWR_MGMT_1, 1)
             self.bus_.write_byte_data(DEVICE_ADDRESS, CONFIG, 0)
-            self.bus_.write_byte_data(DEVICE_ADDRESS, GYRO_CONFIG, 24)
+            # GYRO_CONFIG = 0 -> FS_SEL=0 -> +/-250 deg/s (matches the 7509.55 divisor above)
+            self.bus_.write_byte_data(DEVICE_ADDRESS, GYRO_CONFIG, 0)
             self.bus_.write_byte_data(DEVICE_ADDRESS, INT_ENABLE, 1)
             self.is_connected_ = True
         except OSError:
             self.is_connected_ = False
-        
+
     def read_raw_data(self, addr):
-        #Accelero and Gyro value are 16-bit
+        # Accelero and Gyro value are 16-bit
         high = self.bus_.read_byte_data(DEVICE_ADDRESS, addr)
-        low = self.bus_.read_byte_data(DEVICE_ADDRESS, addr+1)
-        
-        #concatenate higher and lower value
+        low = self.bus_.read_byte_data(DEVICE_ADDRESS, addr + 1)
+
+        # concatenate higher and lower value
         value = ((high << 8) | low)
-            
-        #to get signed value from mpu6050
-        if(value > 32768):
+
+        # to get signed value from mpu6050
+        if value >= 32768:
             value = value - 65536
         return value
 
