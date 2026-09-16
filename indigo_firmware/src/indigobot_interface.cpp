@@ -29,11 +29,11 @@ IndigobotInterface::~IndigobotInterface()
 }
 
 
-CallbackReturn IndigobotInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
+CallbackReturn IndigobotInterface::on_init(
+  const hardware_interface::HardwareComponentInterfaceParams & params)
 {
-  CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
-  if (result != CallbackReturn::SUCCESS)
-  {
+  CallbackReturn result = hardware_interface::SystemInterface::on_init(params);
+  if (result != CallbackReturn::SUCCESS) {
     return result;
   }
 
