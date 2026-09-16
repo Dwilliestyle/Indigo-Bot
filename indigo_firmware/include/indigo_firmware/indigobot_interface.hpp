@@ -44,4 +44,4 @@ private:
 }  // namespace indigo_firmware
 
 
-#endif  // INDIGOBOTBOT_INTERFACE_HPP
+#endif  // INDIGOBOT_INTERFACE_HPP
