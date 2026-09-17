@@ -7,7 +7,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg = get_package_share_directory('indigo_description')
-    xacro_file = os.path.join(pkg, 'urdf', 'indigo.urdf.xacro')
+    xacro_file = os.path.join(pkg, 'urdf', 'indigobot.urdf.xacro')
     rviz_config = os.path.join(pkg, 'rviz', 'indigo.rviz')
 
     robot_description = ParameterValue(
