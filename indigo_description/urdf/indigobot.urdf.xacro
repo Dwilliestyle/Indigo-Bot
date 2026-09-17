@@ -119,7 +119,7 @@
       <geometry>
         <mesh filename="package://indigo_description/meshes/imu_link.STL" />
       </geometry>
-      <material name="black"/>
+      <material name="green"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -203,6 +203,9 @@
   </material>
   <material name="dark_grey">
     <color rgba="0.3 0.3 0.3 1"/>
+  </material>
+  <material name="green">
+    <color rgba="0 1 0 1"/>
   </material>
 
 </robot>
