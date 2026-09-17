@@ -192,6 +192,58 @@
     <child link="caster_link"/>
 </joint>
 
+<link
+    name="pt_camera_link">
+    <inertial>
+      <origin
+        xyz="0.00630730338217479 -7.90865732935165E-18 0.000950308188413934"
+        rpy="0 -1.5708 1.5708" />
+      <mass
+        value="0.00623651844028495" />
+      <inertia
+        ixx="5.11295942352593E-07"
+        ixy="3.46495200123478E-22"
+        ixz="-4.00917493406375E-08"
+        iyy="3.99078324787848E-07"
+        iyz="1.31404415819798E-22"
+        izz="4.02518684222241E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 -1.5708 1.5708" />
+      <geometry>
+        <mesh
+          filename="package://indigo_description/meshes/camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.627450980392157 0.627450980392157 0.627450980392157 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 -1.5708 1.5708" />
+      <geometry>
+        <mesh
+          filename="package://indigo_description/meshes/camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="camera_joint"
+    type="fixed">
+    <origin
+      xyz="-0.07 0 0.05"
+      rpy="0 1.5708 3.14159" />
+    <parent
+      link="base_link" />
+    <child
+      link="pt_camera_link" />
+  </joint>
+
   <material name="blue">
     <color rgba="0 0 1 1"/>
   </material>
