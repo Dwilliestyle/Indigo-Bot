@@ -22,6 +22,8 @@ class CameraPublisher(Node):
         self.publisher_ = self.create_publisher(Image, 'image_raw', 10)
         self.bridge = CvBridge()
 
+        self.get_logger().info("Starting the camera publisher")
+
         self.cap = cv2.VideoCapture(device_id)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
