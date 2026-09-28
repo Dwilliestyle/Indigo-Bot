@@ -145,17 +145,15 @@
                izz="4.14184164228595E-05" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 -0.045" rpy="0 0 3.14159" />
       <geometry>
-        <mesh filename="package://indigo_description/meshes/laser_link.STL" />
+        <mesh filename="package://indigo_description/meshes/ydlidar_x2l.stl" />
       </geometry>
       <material name="dark_grey"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://indigo_description/meshes/laser_link.STL" />
-      </geometry>
+      <origin xyz="0 0 -0.0195" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.051"/></geometry>
     </collision>
   </link>
 
