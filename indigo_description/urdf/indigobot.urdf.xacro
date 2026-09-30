@@ -11,8 +11,8 @@
   <!-- Include Gazebo Parameters 
   <xacro:include filename="$(find indigo_description)/urdf/indigobot_gazebo.xacro" /> -->
 
-  <!-- Include ros2_control Plugins 
-  <xacro:include filename="$(find indigo_description)/urdf/indigobot_ros2_control.xacro" /> -->
+  <!-- Include ros2_control Plugins -->
+  <xacro:include filename="$(find indigo_description)/urdf/indigobot_ros2_control.xacro" />
 
   <link name="base_footprint"/>
   

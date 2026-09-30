@@ -1,0 +1,31 @@
+<robot name="indigobot">
+  <ros2_control name="RobotSystem" type="system">
+    <!--
+       Real robot: IndigobotInterface talking to the Arduino Nano over serial 
+    -->
+    <hardware>
+      <plugin>indigo_firmware/IndigobotInterface</plugin>
+      <param name="port">/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0</param>
+    </hardware>
+
+    <joint name="wheel_right_joint">
+
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="wheel_left_joint">
+
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+</robot>
