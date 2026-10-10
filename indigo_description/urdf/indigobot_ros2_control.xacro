@@ -5,7 +5,7 @@
     -->
     <hardware>
       <plugin>indigo_firmware/IndigobotInterface</plugin>
-      <param name="port">/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0</param>
+      <param name="port">/dev/arduino</param>
     </hardware>
 
     <joint name="wheel_right_joint">
