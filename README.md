@@ -2,7 +2,7 @@
 
 ROS2 Jazzy workspace for my Indigobot, concentrating on the Python language.
 
-![Indigobot](images/20261001_111405.jpg)
+![Indigobot](images/Indigobot.jpg)
 
 This is a work in progress
 
