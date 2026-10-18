@@ -15,7 +15,7 @@ This is a work in progress
 - IMU
 - USB camera (UVC, `/dev/video0`)
 - 3S LiPo with a buck converter for 5 V
-- Three-plate PETG chassis with a rear caster
+- Three-plate PLA chassis with a rear caster
 
 Wheel radius 0.0325 m, wheel separation 0.170 m.
 
