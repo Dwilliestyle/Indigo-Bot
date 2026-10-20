@@ -57,7 +57,8 @@ def generate_launch_description():
 
     mpu_driver = Node(
         package="indigo_firmware",
-        executable="mpu_driver.py"
+        executable="mpu_driver.py",
+        parameters=[{"dlpf_cfg": 6}],
     )
 
     return LaunchDescription(
