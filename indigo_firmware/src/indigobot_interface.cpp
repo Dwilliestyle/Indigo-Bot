@@ -126,6 +126,8 @@ CallbackReturn IndigobotInterface::on_deactivate(const rclcpp_lifecycle::State &
   {
     try
     {
+      arduino_.Write("rp00.00,lp00.00,");
+      arduino_.DrainWriteBuffer();
       arduino_.Close();
     }
     catch (...)
