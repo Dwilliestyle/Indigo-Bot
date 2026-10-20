@@ -144,9 +144,14 @@ class MPU_Driver(Node):
 def main():
     rclpy.init()
     mpu_driver = MPU_Driver()
-    rclpy.spin(mpu_driver)
-    mpu_driver.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(mpu_driver)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        mpu_driver.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
