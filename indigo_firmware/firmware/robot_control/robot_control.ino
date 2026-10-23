@@ -36,9 +36,13 @@ char value[] = "00.00";
 uint8_t value_idx = 0;
 bool is_cmd_complete = false;
 
-// Feedforward                                    // FF: new section
-const double FF_PWM_PER_RAD_S = 15.0;  // 255 PWM / ~17 rad/s top speed (wheels lifted)
-const double FF_MIN_PWM = 0.0;         // extra PWM to overcome friction; raise if slow starts stall
+// Feedforward: measured open-loop curve, wheels lifted, average of both wheels.
+// FF_SPEED[k] is the speed reached at PWM = 15 + 15*k  (15, 30, 45 ... 255)
+const int FF_N = 17;
+const double FF_SPEED[FF_N] = {
+   0.00,  2.25,  6.38,  9.77, 12.13, 13.75, 14.89, 15.72, 16.31,
+  16.78, 17.20, 17.51, 17.80, 17.92, 18.01, 18.31, 18.76
+};
 
 // PID (output is now a correction added to the feedforward)
 double right_wheel_cmd_vel = 0.0;
@@ -47,10 +51,10 @@ double right_wheel_meas_vel = 0.0;
 double left_wheel_meas_vel = 0.0;
 double right_wheel_cmd = 0.0;
 double left_wheel_cmd = 0.0;
-double Kp_r = 6.0;   // FF: was 11.5
+double Kp_r = 3.0;   // FF: was 11.5
 double Ki_r = 7.5;
 double Kd_r = 0.0;   // FF: was 0.1
-double Kp_l = 6.0;   // FF: was 12.8
+double Kp_l = 3.0;   // FF: was 12.8
 double Ki_l = 8.3;
 double Kd_l = 0.0;   // FF: was 0.1
 PID rightMotor(&right_wheel_meas_vel, &right_wheel_cmd, &right_wheel_cmd_vel, Kp_r, Ki_r, Kd_r, DIRECT);
@@ -222,20 +226,20 @@ void loop() {
   }
 }
 
-// FF: starting PWM for a target wheel speed (rad/s, always positive here)
+// FF: PWM for a target wheel speed, interpolated from the measured curve
 double feedforward(double target)
 {
   if(target <= 0.0) return 0.0;
-  return FF_MIN_PWM + FF_PWM_PER_RAD_S * target;
-}
-
-// FF: switching to MANUAL and back makes the library restart its integral
-// from the current output, which we've just set to 0
-void resetPID(PID &pid, double &output)
-{
-  output = 0.0;
-  pid.SetMode(MANUAL);
-  pid.SetMode(AUTOMATIC);
+  if(target >= FF_SPEED[FF_N - 1]) return 255.0;
+  for(int i = 1; i < FF_N; i++)
+  {
+    if(target <= FF_SPEED[i])
+    {
+      double frac = (target - FF_SPEED[i - 1]) / (FF_SPEED[i] - FF_SPEED[i - 1]);
+      return 15.0 * i + 15.0 * frac;   // PWM of point i-1 is 15*i
+    }
+  }
+  return 255.0;
 }
 
 void rightEncoderCallback()
