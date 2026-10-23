@@ -15,10 +15,11 @@
 #define left_encoder_phaseB 5
 
 // Encoders
-unsigned int right_encoder_counter = 0;
-unsigned int left_encoder_counter = 0;
-String right_wheel_sign = "p";
-String left_wheel_sign = "p";
+const double TICKS_PER_REV = 621.0;              // NEW: measured 3 turns, R 1874 / L 1850 (was 385)
+volatile unsigned int right_encoder_counter = 0; // CHANGED: volatile (shared with ISR)
+volatile unsigned int left_encoder_counter = 0;  // CHANGED: volatile
+volatile char right_wheel_sign = 'p';            // CHANGED: char instead of String
+volatile char left_wheel_sign = 'p';             // CHANGED: char instead of String
 unsigned long last_millis = 0;
 const unsigned long interval = 100;
 
@@ -163,8 +164,20 @@ void loop() {
   unsigned long current_millis = millis();
   if(current_millis - last_millis >= interval)
   {
-    right_wheel_meas_vel = (10 * right_encoder_counter * (60.0/385.0)) * 0.10472;
-    left_wheel_meas_vel = (10 * left_encoder_counter * (60.0/385.0)) * 0.10472;
+    // NEW: copy and reset the ISR counters with interrupts paused, so a tick
+    // can't land halfway through reading a 2-byte value
+    noInterrupts();
+    unsigned int right_ticks = right_encoder_counter;
+    unsigned int left_ticks = left_encoder_counter;
+    char right_sign = right_wheel_sign;
+    char left_sign = left_wheel_sign;
+    right_encoder_counter = 0;
+    left_encoder_counter = 0;
+    interrupts();
+
+    // CHANGED: uses the measured TICKS_PER_REV and the copied counts
+    right_wheel_meas_vel = (10 * right_ticks * (60.0/TICKS_PER_REV)) * 0.10472;
+    left_wheel_meas_vel = (10 * left_ticks * (60.0/TICKS_PER_REV)) * 0.10472;
 
     // Stop motors if no command received recently
     if(millis() - last_cmd_millis > cmd_timeout)
@@ -185,12 +198,17 @@ void loop() {
       left_wheel_cmd = 0.0;
     }
 
-    String encoder_read = "r" + right_wheel_sign + String(right_wheel_meas_vel) + 
-                          ",l" + left_wheel_sign + String(left_wheel_meas_vel) + ",";
-    Serial.println(encoder_read);
+    // CHANGED: same "rp1.23,ln0.45," format, printed piece by piece instead of
+    // building a String (avoids heap use every 100 ms)
+    Serial.print('r');
+    Serial.print(right_sign);
+    Serial.print(right_wheel_meas_vel);
+    Serial.print(",l");
+    Serial.print(left_sign);
+    Serial.print(left_wheel_meas_vel);
+    Serial.println(',');
     last_millis = current_millis;
-    right_encoder_counter = 0;
-    left_encoder_counter = 0;
+    // (counter reset moved up into the noInterrupts block)
 
     analogWrite(L298N_enA, right_wheel_cmd);
     analogWrite(L298N_enB, left_wheel_cmd);
@@ -201,11 +219,11 @@ void rightEncoderCallback()
 {
   if(digitalRead(right_encoder_phaseB) == HIGH)
   {
-    right_wheel_sign = "p";
+    right_wheel_sign = 'p';  // CHANGED: char
   }
   else
   {
-    right_wheel_sign = "n";
+    right_wheel_sign = 'n';  // CHANGED: char
   }
   right_encoder_counter++;
 }
@@ -214,11 +232,11 @@ void leftEncoderCallback()
 {
   if(digitalRead(left_encoder_phaseB) == HIGH)
   {
-    left_wheel_sign = "n";
+    left_wheel_sign = 'n';   // CHANGED: char
   }
   else
   {
-    left_wheel_sign = "p";
+    left_wheel_sign = 'p';   // CHANGED: char
   }
   left_encoder_counter++;
 }
