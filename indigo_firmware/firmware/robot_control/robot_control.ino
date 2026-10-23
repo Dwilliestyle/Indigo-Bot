@@ -15,11 +15,11 @@
 #define left_encoder_phaseB 5
 
 // Encoders
-const double TICKS_PER_REV = 621.0;              // NEW: measured 3 turns, R 1874 / L 1850 (was 385)
-volatile unsigned int right_encoder_counter = 0; // CHANGED: volatile (shared with ISR)
-volatile unsigned int left_encoder_counter = 0;  // CHANGED: volatile
-volatile char right_wheel_sign = 'p';            // CHANGED: char instead of String
-volatile char left_wheel_sign = 'p';             // CHANGED: char instead of String
+const double TICKS_PER_REV = 621.0;              // measured 3 turns, R 1874 / L 1850 (was 385)
+volatile unsigned int right_encoder_counter = 0;
+volatile unsigned int left_encoder_counter = 0;
+volatile char right_wheel_sign = 'p';
+volatile char left_wheel_sign = 'p';
 unsigned long last_millis = 0;
 const unsigned long interval = 100;
 
@@ -36,19 +36,23 @@ char value[] = "00.00";
 uint8_t value_idx = 0;
 bool is_cmd_complete = false;
 
-// PID
+// Feedforward                                    // FF: new section
+const double FF_PWM_PER_RAD_S = 15.0;  // 255 PWM / ~17 rad/s top speed (wheels lifted)
+const double FF_MIN_PWM = 0.0;         // extra PWM to overcome friction; raise if slow starts stall
+
+// PID (output is now a correction added to the feedforward)
 double right_wheel_cmd_vel = 0.0;
 double left_wheel_cmd_vel = 0.0;
 double right_wheel_meas_vel = 0.0;
 double left_wheel_meas_vel = 0.0;
 double right_wheel_cmd = 0.0;
 double left_wheel_cmd = 0.0;
-double Kp_r = 11.5;
+double Kp_r = 6.0;   // FF: was 11.5
 double Ki_r = 7.5;
-double Kd_r = 0.1;
-double Kp_l = 12.8;
+double Kd_r = 0.0;   // FF: was 0.1
+double Kp_l = 6.0;   // FF: was 12.8
 double Ki_l = 8.3;
-double Kd_l = 0.1;
+double Kd_l = 0.0;   // FF: was 0.1
 PID rightMotor(&right_wheel_meas_vel, &right_wheel_cmd, &right_wheel_cmd_vel, Kp_r, Ki_r, Kd_r, DIRECT);
 PID leftMotor(&left_wheel_meas_vel, &left_wheel_cmd, &left_wheel_cmd_vel, Kp_l, Ki_l, Kd_l, DIRECT);
 
@@ -65,6 +69,8 @@ void setup() {
   digitalWrite(L298N_in3, HIGH);
   digitalWrite(L298N_in4, LOW);
 
+  rightMotor.SetOutputLimits(-255, 255);  // FF: correction can be negative
+  leftMotor.SetOutputLimits(-255, 255);   // FF
   rightMotor.SetMode(AUTOMATIC);
   leftMotor.SetMode(AUTOMATIC);
 
@@ -164,8 +170,6 @@ void loop() {
   unsigned long current_millis = millis();
   if(current_millis - last_millis >= interval)
   {
-    // NEW: copy and reset the ISR counters with interrupts paused, so a tick
-    // can't land halfway through reading a 2-byte value
     noInterrupts();
     unsigned int right_ticks = right_encoder_counter;
     unsigned int left_ticks = left_encoder_counter;
@@ -175,7 +179,6 @@ void loop() {
     left_encoder_counter = 0;
     interrupts();
 
-    // CHANGED: uses the measured TICKS_PER_REV and the copied counts
     right_wheel_meas_vel = (10 * right_ticks * (60.0/TICKS_PER_REV)) * 0.10472;
     left_wheel_meas_vel = (10 * left_ticks * (60.0/TICKS_PER_REV)) * 0.10472;
 
@@ -189,17 +192,22 @@ void loop() {
     rightMotor.Compute();
     leftMotor.Compute();
 
+    // FF: final PWM = feedforward guess + PID correction
+    double right_pwm = feedforward(right_wheel_cmd_vel) + right_wheel_cmd;
+    double left_pwm = feedforward(left_wheel_cmd_vel) + left_wheel_cmd;
+
+    // FF: commanded stop -> zero output and clear the PID's integral
     if(right_wheel_cmd_vel == 0.0)
     {
-      right_wheel_cmd = 0.0;
+      right_pwm = 0.0;
+      resetPID(rightMotor, right_wheel_cmd);
     }
     if(left_wheel_cmd_vel == 0.0)
     {
-      left_wheel_cmd = 0.0;
+      left_pwm = 0.0;
+      resetPID(leftMotor, left_wheel_cmd);
     }
 
-    // CHANGED: same "rp1.23,ln0.45," format, printed piece by piece instead of
-    // building a String (avoids heap use every 100 ms)
     Serial.print('r');
     Serial.print(right_sign);
     Serial.print(right_wheel_meas_vel);
@@ -208,22 +216,37 @@ void loop() {
     Serial.print(left_wheel_meas_vel);
     Serial.println(',');
     last_millis = current_millis;
-    // (counter reset moved up into the noInterrupts block)
 
-    analogWrite(L298N_enA, right_wheel_cmd);
-    analogWrite(L298N_enB, left_wheel_cmd);
+    analogWrite(L298N_enA, (int)constrain(right_pwm, 0, 255));  // FF
+    analogWrite(L298N_enB, (int)constrain(left_pwm, 0, 255));   // FF
   }
+}
+
+// FF: starting PWM for a target wheel speed (rad/s, always positive here)
+double feedforward(double target)
+{
+  if(target <= 0.0) return 0.0;
+  return FF_MIN_PWM + FF_PWM_PER_RAD_S * target;
+}
+
+// FF: switching to MANUAL and back makes the library restart its integral
+// from the current output, which we've just set to 0
+void resetPID(PID &pid, double &output)
+{
+  output = 0.0;
+  pid.SetMode(MANUAL);
+  pid.SetMode(AUTOMATIC);
 }
 
 void rightEncoderCallback()
 {
   if(digitalRead(right_encoder_phaseB) == HIGH)
   {
-    right_wheel_sign = 'p';  // CHANGED: char
+    right_wheel_sign = 'p';
   }
   else
   {
-    right_wheel_sign = 'n';  // CHANGED: char
+    right_wheel_sign = 'n';
   }
   right_encoder_counter++;
 }
@@ -232,11 +255,11 @@ void leftEncoderCallback()
 {
   if(digitalRead(left_encoder_phaseB) == HIGH)
   {
-    left_wheel_sign = 'n';   // CHANGED: char
+    left_wheel_sign = 'n';
   }
   else
   {
-    left_wheel_sign = 'p';   // CHANGED: char
+    left_wheel_sign = 'p';
   }
   left_encoder_counter++;
 }
