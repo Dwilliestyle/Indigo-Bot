@@ -111,35 +111,17 @@ void loop() {
       is_left_wheel_cmd = true;
       value_idx = 0;
     }
-    else if(chr == 'p')
+        else if(chr == 'p')
     {
-      if(is_right_wheel_cmd && !is_right_wheel_forward)
-      {
-        digitalWrite(L298N_in1, HIGH - digitalRead(L298N_in1));
-        digitalWrite(L298N_in2, HIGH - digitalRead(L298N_in2));
-        is_right_wheel_forward = true;
-      }
-      else if(is_left_wheel_cmd && !is_left_wheel_forward)
-      {
-        digitalWrite(L298N_in3, HIGH - digitalRead(L298N_in3));
-        digitalWrite(L298N_in4, HIGH - digitalRead(L298N_in4));
-        is_left_wheel_forward = true;
-      }
+      // BRAKE: just record direction; driveMotor() applies it each cycle
+      if(is_right_wheel_cmd) is_right_wheel_forward = true;
+      else if(is_left_wheel_cmd) is_left_wheel_forward = true;
     }
     else if(chr == 'n')
     {
-      if(is_right_wheel_cmd && is_right_wheel_forward)
-      {
-        digitalWrite(L298N_in1, HIGH - digitalRead(L298N_in1));
-        digitalWrite(L298N_in2, HIGH - digitalRead(L298N_in2));
-        is_right_wheel_forward = false;
-      }
-      else if(is_left_wheel_cmd && is_left_wheel_forward)
-      {
-        digitalWrite(L298N_in3, HIGH - digitalRead(L298N_in3));
-        digitalWrite(L298N_in4, HIGH - digitalRead(L298N_in4));
-        is_left_wheel_forward = false;
-      }
+      // BRAKE: just record direction; driveMotor() applies it each cycle
+      if(is_right_wheel_cmd) is_right_wheel_forward = false;
+      else if(is_left_wheel_cmd) is_left_wheel_forward = false;
     }
     else if(chr == ',')
     {
@@ -221,8 +203,9 @@ void loop() {
     Serial.println(',');
     last_millis = current_millis;
 
-    analogWrite(L298N_enA, (int)constrain(right_pwm, 0, 255));  // FF
-    analogWrite(L298N_enB, (int)constrain(left_pwm, 0, 255));   // FF
+    // BRAKE: direction + power, or brake when commanded to stop
+    driveMotor(L298N_enA, L298N_in1, L298N_in2, is_right_wheel_forward, right_pwm, right_wheel_cmd_vel == 0.0);
+    driveMotor(L298N_enB, L298N_in3, L298N_in4, is_left_wheel_forward, left_pwm, left_wheel_cmd_vel == 0.0);
   }
 }
 
@@ -275,4 +258,20 @@ void leftEncoderCallback()
     left_wheel_sign = 'p';
   }
   left_encoder_counter++;
+}
+
+// BRAKE: set one motor's direction and power, or short its terminals to brake.
+// Forward = inA HIGH, inB LOW (same as the startup state in setup()).
+void driveMotor(int en, int inA, int inB, bool forward, double pwm, bool brake)
+{
+  if(brake)
+  {
+    digitalWrite(inA, LOW);
+    digitalWrite(inB, LOW);
+    analogWrite(en, 255);
+    return;
+  }
+  digitalWrite(inA, forward ? HIGH : LOW);
+  digitalWrite(inB, forward ? LOW : HIGH);
+  analogWrite(en, (int)constrain(pwm, 0, 255));
 }
