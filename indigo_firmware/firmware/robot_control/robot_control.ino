@@ -242,6 +242,15 @@ double feedforward(double target)
   return 255.0;
 }
 
+// FF: switching to MANUAL and back makes the library restart its integral
+// from the current output, which we've just set to 0
+void resetPID(PID &pid, double &output)
+{
+  output = 0.0;
+  pid.SetMode(MANUAL);
+  pid.SetMode(AUTOMATIC);
+}
+
 void rightEncoderCallback()
 {
   if(digitalRead(right_encoder_phaseB) == HIGH)
