@@ -49,7 +49,7 @@ def generate_launch_description():
 
     camera_publisher_node = Node(
         package="indigo_vision",
-        executable="camera_publisher.py",
+        executable="camera_publisher",
     )
 
     return LaunchDescription([
