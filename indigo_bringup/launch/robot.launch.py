@@ -47,9 +47,15 @@ def generate_launch_description():
         }.items()
     )
 
+    camera_publisher_node = Node(
+        package="indigo_vision",
+        executable="camera_publisher.py",
+    )
+
     return LaunchDescription([
         mode_arg,
         hardware_interface,
         ekf_node,
         teleop,
+        camera_publisher_node
     ])
