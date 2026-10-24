@@ -24,6 +24,15 @@ def generate_launch_description():
         ),
     )
 
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[os.path.join(
+            get_package_share_directory("indigo_bringup"), "config", "ekf.yaml")],
+)
+
     teleop = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -40,5 +49,6 @@ def generate_launch_description():
     return LaunchDescription([
         mode_arg,
         hardware_interface,
+        ekf_node,
         teleop,
     ])
