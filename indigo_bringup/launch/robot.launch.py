@@ -32,7 +32,7 @@ def generate_launch_description():
         output="screen",
         parameters=[os.path.join(
             get_package_share_directory("indigo_bringup"), "config", "ekf.yaml")],
-)
+    )
 
     teleop = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -47,9 +47,17 @@ def generate_launch_description():
         }.items()
     )
 
-    camera_publisher_node = Node(
-        package="indigo_vision",
-        executable="camera_publisher",
+    vision = IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(
+        os.path.join(
+            get_package_share_directory('indigo_vision'),
+            'launch',
+            'vision.launch.py',
+        )
+    ),
+    launch_arguments={
+        'web_video': 'true',
+    }.items(),
     )
 
     return LaunchDescription([
@@ -57,5 +65,5 @@ def generate_launch_description():
         hardware_interface,
         ekf_node,
         teleop,
-        camera_publisher_node
+        vision,
     ])
