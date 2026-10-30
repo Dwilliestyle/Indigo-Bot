@@ -98,14 +98,14 @@ void loop() {
   {
     char chr = Serial.read();
 
-    if(chr == 'r')
+    if(chr == 'l')
     {
       is_right_wheel_cmd = true;
       is_left_wheel_cmd = false;
       value_idx = 0;
       is_cmd_complete = false;
     }
-    else if(chr == 'l')
+    else if(chr == 'r')
     {
       is_right_wheel_cmd = false;
       is_left_wheel_cmd = true;
@@ -194,12 +194,13 @@ void loop() {
       resetPID(leftMotor, left_wheel_cmd);
     }
 
+        // SWAP: report physical wheels under the names ROS expects
     Serial.print('r');
-    Serial.print(right_sign);
-    Serial.print(right_wheel_meas_vel);
-    Serial.print(",l");
     Serial.print(left_sign);
     Serial.print(left_wheel_meas_vel);
+    Serial.print(",l");
+    Serial.print(right_sign);
+    Serial.print(right_wheel_meas_vel);
     Serial.println(',');
     last_millis = current_millis;
 
