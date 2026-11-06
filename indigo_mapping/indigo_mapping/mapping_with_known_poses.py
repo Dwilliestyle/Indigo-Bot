@@ -7,6 +7,7 @@ from nav_msgs.msg import OccupancyGrid, MapMetaData
 from tf2_ros import Buffer, TransformListener
 from tf2_ros import TransformException
 from rclpy.executors import ExternalShutdownException
+from rclpy.qos import qos_profile_sensor_data
 import math
 
 PRIOR_PROB = 0.5
@@ -110,7 +111,7 @@ class MappingWithKnownPoses(Node):
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.scan_sub = self.create_subscription(LaserScan, "scan", self.scanCallback, 10)
+        self.scan_sub = self.create_subscription(LaserScan, "scan", self.scanCallback, qos_profile_sensor_data)
         self.map_pub = self.create_publisher(OccupancyGrid, "map", 1)
         self.timer = self.create_timer(1.0, self.timerCallback)
 
