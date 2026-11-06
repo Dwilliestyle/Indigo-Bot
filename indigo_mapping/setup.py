@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'mapping_with_known_poses = indigo_vision.mapping_with_known_poses:main',
+            'mapping_with_known_poses = indigo_mapping.mapping_with_known_poses:main',
         ],
     },
 )
