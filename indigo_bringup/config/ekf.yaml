@@ -13,7 +13,7 @@ ekf_filter_node:
 
     # ---- Wheel odometry ----
     # Check the exact topic with: ros2 topic list | grep odom
-    odom0: /diff_drive_controller/odom
+    odom0: /indigobot_controller/odom
     # Order: x, y, z, roll, pitch, yaw,
     #        vx, vy, vz, vroll, vpitch, vyaw,
     #        ax, ay, az
