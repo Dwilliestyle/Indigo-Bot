@@ -29,9 +29,23 @@ def generate_launch_description():
         }.items(),
     )
 
+    vision = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('indigo_vision'),
+                'launch',
+                'vision.launch.py',
+            )
+        ),
+        launch_arguments={
+            'web_video': 'true',
+        }.items(),
+    )
+
     return LaunchDescription([
         robot,
         lidar,
         # Give the controllers, TF and lidar a few seconds to come up first
         TimerAction(period=5.0, actions=[slam]),
+        vision
     ])
